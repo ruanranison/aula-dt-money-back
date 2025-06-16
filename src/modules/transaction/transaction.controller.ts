@@ -1,53 +1,36 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Res,
-} from '@nestjs/common';
-import { TransactionService } from './transaction.service';
+import { Controller, Get, Post, Body, Param, Put, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
-import { Response } from 'express';
+import { Transaction } from './entities/transaction.entity';
 
-@Controller('transaction')
-export class TransactionController {
-  constructor(private readonly transactionService: TransactionService) {}
+@Controller('transactions')
+export class TransactionsController {
+  constructor(private readonly transactionsService: TransactionsService) {}
 
   @Post()
-  async create(
-    @Body() createTransactionDto: CreateTransactionDto,
-    @Res() res: Response,
-  ) {
-    const createdTransaction =
-      await this.transactionService.create(createTransactionDto);
-    res.status(201).send(createdTransaction);
-    return;
+  create(@Body() createTransactionDto: CreateTransactionDto): Transaction {
+    return this.transactionsService.create(createTransactionDto);
   }
 
   @Get()
-  findAll() {
-    return this.transactionService.findAll();
+  findAll(): Transaction[] {
+    return this.transactionsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transactionService.findOne(+id);
+  findOne(@Param('id') id: string): Transaction {
+    return this.transactionsService.findOne(Number(id));
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateTransactionDto: UpdateTransactionDto,
-  ) {
-    return this.transactionService.update(+id, updateTransactionDto);
+  @Put(':id')
+  update(@Param('id') id: string, @Body() updateTransactionDto: UpdateTransactionDto): Transaction {
+    return this.transactionsService.update(Number(id), updateTransactionDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.transactionService.remove(+id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id') id: string): void {
+    this.transactionsService.remove(Number(id));
   }
 }
