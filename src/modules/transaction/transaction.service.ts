@@ -1,37 +1,48 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { Transaction } from './entities/transaction.entity';
 
 @Injectable()
-export class TransactionService {
-  constructor(private readonly prisma: PrismaService) {}
-  async create({ category, data, price, title, type }: CreateTransactionDto) {
-    const createdTransaction = await this.prisma.transaction.create({
-      data: {
-        title,
-        category,
-        data,
-        price,
-        type,
-      },
-    });
-    return createdTransaction;
+export class TransactionsService {
+  private transactions: Transaction[] = [];
+  private currentId = 1;
+
+  create(createTransactionDto: CreateTransactionDto): Transaction {
+    const newTransaction: Transaction = {
+      id: this.currentId++,
+      ...createTransactionDto,
+    };
+    this.transactions.push(newTransaction);
+    return newTransaction;
   }
 
-  findAll() {
-    return `This action returns all transaction`;
+  findAll(): Transaction[] {
+    return this.transactions;
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} transaction`;
+  findOne(id: number): Transaction {
+    const transaction = this.transactions.find((t) => t.id === id);
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+    return transaction;
   }
 
-  update(id: string, updateTransactionDto: UpdateTransactionDto) {
-    return `This action updates a #${id} transaction`;
+  update(id: number, updateTransactionDto: UpdateTransactionDto): Transaction {
+    const index = this.transactions.findIndex((t) => t.id === id);
+    if (index === -1) {
+      throw new NotFoundException('Transaction not found');
+    }
+    this.transactions[index] = { ...this.transactions[index], ...updateTransactionDto };
+    return this.transactions[index];
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} transaction`;
+  remove(id: number): void {
+    const index = this.transactions.findIndex((t) => t.id === id);
+    if (index === -1) {
+      throw new NotFoundException('Transaction not found');
+    }
+    this.transactions.splice(index, 1);
   }
 }
